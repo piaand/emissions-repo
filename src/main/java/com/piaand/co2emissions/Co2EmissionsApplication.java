@@ -17,20 +17,18 @@ import java.util.logging.Logger;
 public class Co2EmissionsApplication {
 
 	private final LogConfigurations configurations;
+	private final InputChecker inputChecker;
 	private static final Logger logger = Logger.getLogger(Co2EmissionsApplication.class.getName());
 	private static final String pathToResource = "src/main/resources";
 	private static final String filePathDefault = "/csv/emissions.csv";
 
-	public Co2EmissionsApplication(LogConfigurations configurations) {
+	public Co2EmissionsApplication(LogConfigurations configurations, InputChecker inputChecker) {
 		this.configurations = configurations;
+		this.inputChecker = inputChecker;
 	}
 
-	private final void addEmissionToDatabase(String[] data) {
-		System.out.println("Year: " + data[0] + " Country: " + data[1]);
-	}
 
 	private final void readCsvEmissions() {
-		System.out.println("Hello World!");
 		File inputFile = new File(pathToResource + filePathDefault);
 		if (inputFile.isFile() && inputFile.exists()) {
 			try {
@@ -38,7 +36,7 @@ public class Co2EmissionsApplication {
 				String row;
 				while ((row = csvReader.readLine()) != null) {
 					String[] data = row.split(",");
-					addEmissionToDatabase(data);
+					inputChecker.addEmissionToDatabase(data);
 				}
 				csvReader.close();
 			} catch (FileNotFoundException e) {
