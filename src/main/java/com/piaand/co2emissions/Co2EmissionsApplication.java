@@ -4,6 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 
 import java.io.*;
 import java.util.logging.Logger;
@@ -54,6 +55,7 @@ public class Co2EmissionsApplication {
 		SpringApplication.run(Co2EmissionsApplication.class, args);
 	}
 
+	@Profile("!test")
 	@Bean
 	CommandLineRunner runner() {
 		return args -> {

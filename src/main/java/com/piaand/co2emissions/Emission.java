@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 
 /**
  * Data table Entity representation as Java class (row saved from csv). Every entry has an id type Long.
@@ -19,8 +19,8 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 public class Emission extends AbstractPersistable<Long> {
 
-    @NotBlank(message="Country name is mandatory")
-    private String countryName;
+    @ManyToOne
+    private Country country;
 
     @Min(1751)
     @Max(2021)
