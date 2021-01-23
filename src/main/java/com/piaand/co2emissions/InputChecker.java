@@ -21,20 +21,25 @@ public class InputChecker {
 
     public void addEmissionToDatabase(String[] data) {
         setRowCounter(getRowCounter() + 1);
-        try {
-            String emissionYear = data[0];
-            String emissionCountry = data[1];
-            if (emissionYear == null || emissionYear.isBlank() || emissionCountry == null || emissionCountry.isBlank()) {
-                //TODO: add corrupted rows to own table
-                logger.warning("Data row number " + rowCounter + " in csv has either no year or no country.");
-            } else {
-                Emission emission = emissionService.createDataObjectFromRow(data);
-                emissionService.saveToDatabase(emission);
+        if (getRowCounter() == 1) {
+            logger.info("Read the header row.");
+        } else {
+            try {
+                String emissionYear = data[0];
+                String emissionCountry = data[1];
+                if (emissionYear == null || emissionYear.isBlank() || emissionCountry == null || emissionCountry.isBlank()) {
+                    //TODO: add corrupted rows to own table
+                    logger.warning("Data row number " + rowCounter + " in csv has either no year or no country.");
+                } else {
+                    Emission emission = emissionService.createDataObjectFromRow(data);
+                    emissionService.saveToDatabase(emission);
+                }
+            } catch (RuntimeException e) {
+                logger.warning("Data row number " + rowCounter + " cannot be added. Reason: " + e);
+            } catch (Exception e) {
+                logger.severe("Unexpected exception: " + e);
             }
-        } catch (RuntimeException e) {
-            logger.warning("Data row number " + rowCounter + " cannot be added. Reason: " + e);
-        } catch (Exception e) {
-            logger.severe("Unexpected exception: " + e);
         }
+
     }
 }

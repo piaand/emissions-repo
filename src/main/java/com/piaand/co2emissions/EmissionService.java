@@ -15,8 +15,7 @@ public class EmissionService {
 
     public Emission createDataObjectFromRow(String[] dataRow) {
         try {
-            //TODO: remove "" around number (4 cases according to logs)
-            Integer year = Integer.parseInt(dataRow[0]);
+            Integer year = Integer.parseInt(dataRow[0].replace("\"", ""));
             Emission emission = new Emission(dataRow[1], year);
             return emission;
         } catch (NumberFormatException e) {
