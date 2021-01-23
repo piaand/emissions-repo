@@ -1,8 +1,6 @@
 package com.piaand.co2emissions;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.logging.Logger;
@@ -32,7 +30,7 @@ public class InputChecker {
                     logger.warning("Data row number " + rowCounter + " in csv has either no year or no country.");
                 } else {
                     Emission emission = emissionService.createDataObjectFromRow(data);
-                    emissionService.saveToDatabase(emission);
+                    emissionService.saveEmissionToDatabase(emission);
                 }
             } catch (RuntimeException e) {
                 logger.warning("Data row number " + rowCounter + " cannot be added. Reason: " + e);
