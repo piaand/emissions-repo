@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
 * REST API controller. Collection of different end-points user may call to get emission data.
+ * /polluters - returns all polluter countries alphabetically sorted
  */
 @RestController
 public class EmissionController {
@@ -15,7 +16,7 @@ public class EmissionController {
     public EmissionController (EmissionService emissionService) { this.emissionService = emissionService; }
 
     @GetMapping("/")
-    public String listEndPoints() { return "Here will be end-points"; }
+    public JsonNode listEndPoints() { return emissionService.listEndPoints(); }
 
     @GetMapping("/polluters")
     public JsonNode listAllPolluters() { return emissionService.listPollutersAlphabetically(); }

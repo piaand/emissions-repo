@@ -27,8 +27,13 @@ public class EmissionService {
     public Emission createDataObjectFromRow(String[] dataRow) {
         try {
             Integer year = Integer.parseInt(dataRow[0].replace("\"", ""));
-            addCountry(dataRow[1].replace("\"", ""));
-            //TODO: handle Viet Nam
+            String countryName = dataRow[1].replace("\"", "");
+
+            //Handle exception of Viet Nam
+            if(countryName.equals("VIET NAM")) {
+                countryName = "VIETNAM";
+            }
+            addCountry(countryName);
             Country country = countryRepository.findByName(dataRow[1]);
             Emission emission = new Emission(country, year);
             return emission;
@@ -89,6 +94,14 @@ public class EmissionService {
                 );
             }
         }
+    }
+
+    public ObjectNode listEndPoints() {
+        String endPoint1 = "/polluters - returns all polluter countries alphabetically sorted";
+
+        List<String> list = new ArrayList<>();
+        list.add(endPoint1);
+        return turnStringListToJson(list);
     }
 
     public void saveEmissionToDatabase(Emission emission) {
