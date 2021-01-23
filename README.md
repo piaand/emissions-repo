@@ -1,6 +1,8 @@
 # CO2 emission API interface
 
-Application builds an API that contains endpoints from where data about worst polluters in the world can be found. Data is read from the csv that is located at `src/main/resources/csv/emissions.csv`. Csv contain data about polluter countries, the year and category of emissions as well as emissions per capita. Original source of the data can be found [here](https://datahub.io/core/co2-fossil-by-nation#data). 
+Application builds an API that contains endpoints from where data about the worst polluters in the world can be found. Live version of the API can be found [here](https://aqueous-mesa-88968.herokuapp.com/api/v1/) - be patient as it can take time for Heroku to serve the app.
+
+Data is read from the csv that is located at `src/main/resources/csv/emissions.csv`. Csv contains data about polluter countries, the year and category of emissions as well as emissions per capita. Original source of the data can be found [here](https://datahub.io/core/co2-fossil-by-nation#data). 
 
 ## Cleaning the data
 The data in csv is corrupted and therefore some steps are taken before the data is stored in the database. Logs at `logs/emissions.log` record all the rows that were deleted in the process.
