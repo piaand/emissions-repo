@@ -24,17 +24,60 @@ public class EmissionService {
         this.countryRepository = countryRepository;
     }
 
+    private Double parseEmissionsToDouble(String emissionField) {
+        try{
+            Double emissions;
+            if (emissionField == null || emissionField.isBlank()) {
+                emissions = Double.NaN;
+            } else {
+                //test csv new csv reader that handles quotes .replace("\"", "")
+                emissions = Double.parseDouble(emissionField);
+            }
+            return emissions;
+        } catch (NumberFormatException e) {
+            logger.warning("Emission field: " + emissionField + " cannot be transformed to number.");
+            return Double.NaN;
+        }
+    }
+
+    private Integer parseYearToInt(String yearField) {
+        try {
+            //test csv new csv reader that handles quotes .replace("\"", "")
+            Integer year = Integer.parseInt(yearField);
+            return year;
+        } catch (NumberFormatException e) {
+            logger.warning("Year field: " + yearField + " cannot be transformed to number.");
+            throw new NumberFormatException("Data row is corrupted.");
+        }
+    }
+
     public Emission createDataObjectFromRow(String[] dataRow) {
         try {
-            Integer year = Integer.parseInt(dataRow[0].replace("\"", ""));
-            String countryName = dataRow[1].replace("\"", "");
+            Integer year = parseYearToInt(dataRow[0]);
+            //test csv new csv reader that handles quotes .replace("\"", "")
+            String countryName = dataRow[1];
+            Double total = parseEmissionsToDouble(dataRow[2]);
+            Double solid = parseEmissionsToDouble(dataRow[3]);
+            Double liquid = parseEmissionsToDouble(dataRow[4]);
+            Double gasFuel = parseEmissionsToDouble(dataRow[5]);
+            Double cement = parseEmissionsToDouble(dataRow[6]);
+            Double gasFlaring = parseEmissionsToDouble(dataRow[7]);
 
-            //Handle exception of Viet Nam
+            //Handle name fromatting of of Viet Nam
             if(countryName.equals("VIET NAM")) {
                 countryName = "VIETNAM";
             }
+
+            //Check total emissions match with sum of emissions. Bunker fuels not in total
+            Double emissionSum = solid + liquid + gasFlaring + gasFuel + cement;
+            Boolean totalChecks = Math.abs(emissionSum-total) <= 1;
+            if (!totalChecks) {
+                logger.warning("Following total and category sum didn't match: " + total +" : " + emissionSum);
+            }
+
+            //Create and add emissions to country
             addCountry(countryName);
-            Country country = countryRepository.findByName(dataRow[1]);
+            Country country = countryRepository.findByName(countryName);
             Emission emission = new Emission(country, year);
             return emission;
         } catch (NumberFormatException e) {

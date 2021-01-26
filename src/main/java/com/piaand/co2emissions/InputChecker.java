@@ -32,6 +32,8 @@ public class InputChecker {
                     Emission emission = emissionService.createDataObjectFromRow(data);
                     emissionService.saveEmissionToDatabase(emission);
                 }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                logger.warning("Data string at index 0: " + data[0]);
             } catch (RuntimeException e) {
                 logger.warning("Data row number " + rowCounter + " cannot be added. Reason: " + e);
             } catch (Exception e) {

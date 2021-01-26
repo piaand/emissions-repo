@@ -36,9 +36,12 @@ public class Co2EmissionsApplication {
 				BufferedReader csvReader = new BufferedReader(new FileReader(pathToResource + filePathDefault));
 				String row;
 				while ((row = csvReader.readLine()) != null) {
-					String[] data = row.split(",");
+					//Regex: split on all commas that have even amount of "" coming after them
+					String[] data = row.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 					inputChecker.addEmissionToDatabase(data);
 				}
+				//read all csv, close csv reader
+				//while there is stuff in list call inputChecker.addEmissionToDatabase(data);
 				csvReader.close();
 			} catch (FileNotFoundException e) {
 				logger.severe("File not found at: " + pathToResource + filePathDefault + " system exits.");
