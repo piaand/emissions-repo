@@ -30,7 +30,6 @@ public class EmissionService {
             if (emissionField == null || emissionField.isBlank()) {
                 emissions = Double.NaN;
             } else {
-                //test csv new csv reader that handles quotes .replace("\"", "")
                 emissions = Double.parseDouble(emissionField);
             }
             return emissions;
@@ -42,7 +41,6 @@ public class EmissionService {
 
     private Integer parseYearToInt(String yearField) {
         try {
-            //test csv new csv reader that handles quotes .replace("\"", "")
             Integer year = Integer.parseInt(yearField);
             return year;
         } catch (NumberFormatException e) {
@@ -54,7 +52,6 @@ public class EmissionService {
     public Emission createDataObjectFromRow(String[] dataRow) {
         try {
             Integer year = parseYearToInt(dataRow[0]);
-            //test csv new csv reader that handles quotes .replace("\"", "")
             String countryName = dataRow[1];
             Double total = parseEmissionsToDouble(dataRow[2]);
             Double solid = parseEmissionsToDouble(dataRow[3]);

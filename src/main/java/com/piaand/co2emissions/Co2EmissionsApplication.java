@@ -1,5 +1,9 @@
 package com.piaand.co2emissions;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,29 +32,39 @@ public class Co2EmissionsApplication {
 		this.inputChecker = inputChecker;
 	}
 
+	private final CSVReader readData() {
+		try {
+			final CSVParser parser = new CSVParserBuilder()
+					.withSeparator(',')
+					.withIgnoreQuotations(false)
+					.build();
+			final CSVReader reader = new CSVReaderBuilder(new FileReader(pathToResource + filePathDefault))
+					.withSkipLines(1)
+					.withCSVParser(parser)
+					.build();
+			return reader;
+		} catch (FileNotFoundException e) {
+			logger.severe("File not found at: " + pathToResource + filePathDefault + " system exits.");
+			throw new RuntimeException("Error reading csv file");
+		} catch	(Exception e) {
+			logger.severe("Unexpected error:" + e + " when creating reader. System exits.");
+			throw new RuntimeException("Error reading csv file");
+		}
+	}
 
 	private final void readCsvEmissions() {
 		File inputFile = new File(pathToResource + filePathDefault);
 		if (inputFile.isFile() && inputFile.exists()) {
 			try {
-				BufferedReader csvReader = new BufferedReader(new FileReader(pathToResource + filePathDefault));
-				String row;
-				while ((row = csvReader.readLine()) != null) {
-					//Regex: split on all commas that have even amount of "" coming after them
-					String[] data = row.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-					inputChecker.addEmissionToDatabase(data);
+				CSVReader reader = readData();
+				String[] row;
+				while ((row = reader.readNext()) != null) {
+					inputChecker.addEmissionToDatabase(row);
 				}
-				//read all csv, close csv reader
-				//while there is stuff in list call inputChecker.addEmissionToDatabase(data);
-				csvReader.close();
-			} catch (FileNotFoundException e) {
-				logger.severe("File not found at: " + pathToResource + filePathDefault + " system exits.");
-				System.exit(1);
 			} catch	(Exception e) {
 				logger.severe("Unexpected error:" + e + " system exits.");
 				System.exit(1);
 			}
-
 		}
 	}
 
