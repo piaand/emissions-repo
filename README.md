@@ -9,10 +9,11 @@ The data in csv is corrupted and therefore some steps are taken before the data 
 1. Every emission, row of data, must have a named country and a year between 1751 and 2021.
     - 660 rows removed because of either year or country was left empty
     - 1 case where year was marked as "UKRAINE"
-2. Quatation marks (" ") from country names and years were removed
+2. Quatation marks (" ") were taken into consideration by openCSV. With 4 rows with the country record "BONAIRE, SAINT EUSTATIUS, AND SABA" double quatations were not handled and records were dropped from database.
 3. Country "Viet nam" was corrected to English language "Vietnam"
 4. Some emissions were not recorded to countries but special events, such as <b>Kuwaiti oil fires</b>. These were left to the database and under Country the name of the event was listed.
-5. Due to rounding, 671 rows had > 0.0000001 difference between the total amount that was listed in the csv and the total amount summed between all the categories (gas fuel, gas flaring, cement, solid and liquid fuels). The amount of cases where this difference was greater than 1 was 11 and in these cases the difference was 2 (the reported total was always smaller than the sum of categories). 
+5. Around 670 rows had > 0.0000001 difference between the total amount that was listed in the csv and the total amount summed between all the categories (gas fuel, gas flaring, cement, solid and liquid fuels). The amount of cases where this difference was greater than 1 was 11 and in these cases the difference was 2 units (the reported total was always smaller than the sum of categories). The differences are small but since the category numbers were saved to database and total number is calculated from the category amounts as accordance to database normalization rules, these 670 rows total are inflated slightly.
+6. Empty emission values were changed to Double.NaN
 
 ## Improvement suggestions
 1. Data cleaning decisions have been done best to my abilities. However, removing some of the rows may have an impact on the statistic that are shown and therefore further analysis should be done on the rows that are removed. The csv rows are stored in the logs - you can for example see the rows removed due to missing year or country as simply as:

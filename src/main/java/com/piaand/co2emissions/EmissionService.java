@@ -49,6 +49,16 @@ public class EmissionService {
         }
     }
 
+    private void checkCategoryAndTotalSums(Double solid, Double liquid, Double gasFlaring, Double gasFuel, Double cement, Double total) {
+        //Check total emissions match with sum of emissions. Bunker fuels not in total
+        //This does not compute well with NaN
+        Double emissionSum = solid + liquid + gasFlaring + gasFuel + cement;
+        Boolean totalChecks = Math.abs(emissionSum-total) <= 1;
+        if (!totalChecks) {
+            logger.warning("Following total and category sum didn't match: " + total +" : " + emissionSum);
+        }
+    }
+
     public Emission createDataObjectFromRow(String[] dataRow) {
         try {
             Integer year = parseYearToInt(dataRow[0]);
@@ -59,23 +69,19 @@ public class EmissionService {
             Double gasFuel = parseEmissionsToDouble(dataRow[5]);
             Double cement = parseEmissionsToDouble(dataRow[6]);
             Double gasFlaring = parseEmissionsToDouble(dataRow[7]);
+            //TODO: remember to add bunkerfuels and per capita to db
 
             //Handle name fromatting of of Viet Nam
             if(countryName.equals("VIET NAM")) {
                 countryName = "VIETNAM";
             }
 
-            //Check total emissions match with sum of emissions. Bunker fuels not in total
-            Double emissionSum = solid + liquid + gasFlaring + gasFuel + cement;
-            Boolean totalChecks = Math.abs(emissionSum-total) <= 1;
-            if (!totalChecks) {
-                logger.warning("Following total and category sum didn't match: " + total +" : " + emissionSum);
-            }
+            checkCategoryAndTotalSums(solid, liquid, gasFlaring, gasFuel, cement, total);
 
             //Create and add emissions to country
             addCountry(countryName);
             Country country = countryRepository.findByName(countryName);
-            Emission emission = new Emission(country, year);
+            Emission emission = new Emission(country, year, solid, liquid, gasFlaring, gasFuel, cement);
             return emission;
         } catch (NumberFormatException e) {
             logger.warning("Year field: " + dataRow[0] + " cannot be transformed to number.");

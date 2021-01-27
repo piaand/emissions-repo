@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -25,4 +26,15 @@ public class Emission extends AbstractPersistable<Long> {
     @Min(1751)
     @Max(2021)
     private Integer year;
+
+    @DecimalMin("0.0")
+    private Double solid;
+    @DecimalMin("0.0")
+    private Double liquid;
+    @DecimalMin("0.0")
+    private Double gasFlaring;
+    @DecimalMin("0.0")
+    private Double gasFuel;
+    @DecimalMin("0.0")
+    private Double cement;
 }

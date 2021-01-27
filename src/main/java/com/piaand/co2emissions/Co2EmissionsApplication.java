@@ -61,6 +61,7 @@ public class Co2EmissionsApplication {
 				while ((row = reader.readNext()) != null) {
 					inputChecker.addEmissionToDatabase(row);
 				}
+				reader.close();
 			} catch	(Exception e) {
 				logger.severe("Unexpected error:" + e + " system exits.");
 				System.exit(1);

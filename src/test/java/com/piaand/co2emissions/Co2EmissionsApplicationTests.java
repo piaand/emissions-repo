@@ -36,6 +36,18 @@ class Co2EmissionsApplicationTests {
 	private final Integer year2 = 1980;
 	private final Integer year3 = 2000;
 	private final Integer year4 = 2020;
+	private final Double solid1 = 0.0;
+	private final Double solid2 = Double.NaN;
+	private final Double solid3 = 100.9;
+	private final Double solid4 = 10.1;
+	private final Double liquid1 = 29.2;
+	private final Double liquid2 = 0.0;
+	private final Double liquid3 = Double.NaN;
+	private final Double liquid4 = 1.0;
+	private final Double gasFlaring = 1.0;
+	private final Double gasFuels = 1.0;
+	private final Double cement = 1.0;
+
 
 	private void saveCountry(String name) {
 		Country country	= new Country();
@@ -50,29 +62,29 @@ class Co2EmissionsApplicationTests {
 		saveCountry(countryName4);
 	}
 
-	private void saveEmission(String countryName, Integer year) {
+	private void saveEmission(String countryName, Integer year, Double solid, Double liquid, Double gasFlaring, Double gasFuels, Double cement) {
 		Country country = countryRepository.findByName(countryName);
-		Emission emission = new Emission(country, year);
+		Emission emission = new Emission(country, year, solid, liquid, gasFlaring, gasFuels, cement);
 		emissionRepository.save(emission);
 	}
 
 	private void addInitEmissions() {
-		saveEmission(countryName1, year1);
-		saveEmission(countryName1, year2);
-		saveEmission(countryName1, year3);
-		saveEmission(countryName1, year4);
-		saveEmission(countryName2, year1);
-		saveEmission(countryName2, year2);
-		saveEmission(countryName2, year3);
-		saveEmission(countryName2, year4);
-		saveEmission(countryName3, year1);
-		saveEmission(countryName3, year2);
-		saveEmission(countryName3, year3);
-		saveEmission(countryName3, year4);
-		saveEmission(countryName4, year1);
-		saveEmission(countryName4, year2);
-		saveEmission(countryName4, year3);
-		saveEmission(countryName4, year4);
+		saveEmission(countryName1, year1, solid1, liquid1, gasFlaring, gasFuels, cement);
+		saveEmission(countryName1, year2, solid1, liquid2, gasFlaring, gasFuels, cement);
+		saveEmission(countryName1, year3, solid2, liquid1, gasFlaring, gasFuels, cement);
+		saveEmission(countryName1, year4, solid2, liquid3, gasFlaring, gasFuels, cement);
+		saveEmission(countryName2, year1, solid4, liquid4, gasFlaring, gasFuels, cement);
+		saveEmission(countryName2, year2, solid3, liquid1, gasFlaring, gasFuels, cement);
+		saveEmission(countryName2, year3, solid3, liquid4, gasFlaring, gasFuels, cement);
+		saveEmission(countryName2, year4, solid3, liquid2, gasFlaring, gasFuels, cement);
+		saveEmission(countryName3, year1, solid3, liquid3, gasFlaring, gasFuels, cement);
+		saveEmission(countryName3, year2, solid1, liquid3, gasFlaring, gasFuels, cement);
+		saveEmission(countryName3, year3, solid1, liquid4, gasFlaring, gasFuels, cement);
+		saveEmission(countryName3, year4, solid2, liquid2, gasFlaring, gasFuels, cement);
+		saveEmission(countryName4, year1, solid2, liquid4, gasFlaring, gasFuels, cement);
+		saveEmission(countryName4, year2, solid4, liquid1, gasFlaring, gasFuels, cement);
+		saveEmission(countryName4, year3, solid4, liquid2, gasFlaring, gasFuels, cement);
+		saveEmission(countryName4, year4, solid4, liquid3, gasFlaring, gasFuels, cement);
 
 	}
 
