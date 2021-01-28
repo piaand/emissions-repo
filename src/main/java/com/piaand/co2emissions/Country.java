@@ -1,5 +1,6 @@
 package com.piaand.co2emissions;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,9 @@ public class Country extends AbstractPersistable<Long> {
     @Column(unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "country")
+    @JsonIgnoreProperties("country")
+    @OneToMany(mappedBy = "country",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private List<Emission> emissions = new ArrayList<>();
 }

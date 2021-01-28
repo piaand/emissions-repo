@@ -2,15 +2,19 @@ package com.piaand.co2emissions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.print.Pageable;
+import java.util.*;
 import java.util.logging.Logger;
 
 @Service
@@ -23,7 +27,13 @@ public class EmissionService {
         this.emissionRepository = emissionRepository;
         this.countryRepository = countryRepository;
     }
-
+/*
+    public Pageable createPageableSort(String type, Integer amount){
+        Pageable page = (Pageable) PageRequest.of(0, amount, Sort.by("year").ascending()
+                        .and(Sort.by(type).descending()));
+        return page;
+    }
+*/
     private Double parseEmissionsToDouble(String emissionField) {
         try{
             Double emissions;
@@ -57,6 +67,29 @@ public class EmissionService {
         if (!totalChecks) {
             logger.warning("Following total and category sum didn't match: " + total +" : " + emissionSum);
         }
+    }
+
+    //TODO: add total, per capita and bunker fuels
+    private String validateType(Map<String, String> allParams) {
+        List<String> validTypes = Arrays.asList("solid", "liquid", "gasflaring", "gasfuel", "cement");
+        String emissionType = null;
+        Boolean valid = false;
+
+        if(allParams.containsKey("type")) {
+            emissionType = allParams.get("type").toLowerCase(Locale.ROOT);
+            if (validTypes.contains(emissionType)) {
+                valid = true;
+            }
+        }
+        if (valid) {
+            return emissionType;
+        } else {
+            logger.warning("Emission type queried either null or not valid: " + emissionType);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Emission type is not in database."
+            );
+        }
+
     }
 
     public Emission createDataObjectFromRow(String[] dataRow) {
@@ -139,6 +172,82 @@ public class EmissionService {
                         HttpStatus.NOT_IMPLEMENTED, "Result cannot be returned."
                 );
             }
+        }
+    }
+
+    public JsonNode parseEmissionResult(List<Emission> list, String type, Integer limit) {
+        try {
+            if (list.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No data with these parameters."
+                );
+            }
+            Integer groupYear = list.get(0).getYear();
+            System.out.println(groupYear);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            ObjectNode endResult = mapper.createObjectNode();
+            Integer size = list.size();
+            Integer i = 0;
+
+            for (Emission emission : list) {
+                ArrayNode arrayNode = mapper.createArrayNode();
+                JsonNode node = mapper.convertValue(emission, JsonNode.class);
+                arrayNode.add(node);
+                if(emission.getYear() != groupYear || i == size - 1) {
+                    ObjectNode polluterResultNode = mapper.createObjectNode();
+                    polluterResultNode.set("polluters", arrayNode);
+                    polluterResultNode.put("year", groupYear);
+                    endResult.set("result", polluterResultNode);
+                    groupYear = emission.getYear();
+
+                }
+                i++;
+            }
+            System.out.println(endResult.toString());
+            return endResult;
+        } catch (Exception e) {
+            logger.severe("Unexpected exception: " + e);
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_IMPLEMENTED, "Parsing result is not acting as planned."
+            );
+        }
+    }
+
+    public JsonNode listWorstPollutersWithFilters(Map<String, String> allParams) {
+        String emissionType = null;
+        //the earliest year we have data on;
+        Integer from = 1751;
+        //latest year we have data on
+        Integer to = 2021;
+        Integer top = 0;
+
+        try {
+            //Insert all query params
+            emissionType = validateType(allParams);
+            if (allParams.containsKey("from")) {
+                from = parseYearToInt(allParams.get("from"));
+            }
+            if (allParams.containsKey("to")) {
+                to = parseYearToInt(allParams.get("to"));
+            }
+            if (allParams.containsKey("top")) {
+                top = Integer.parseInt(allParams.get("top"));
+            }
+
+            //Pageable page = createPageableSort(emissionType, top);
+            System.out.println("Now search");
+            //TODO: if total, then other repository query
+            List<Emission> polluters = emissionRepository.findAllByYearBetweenOrderByYearAsc(from, to);
+            System.out.println("print polluter nro 1");
+
+            return parseEmissionResult(polluters, emissionType, top);
+        } catch (NumberFormatException e) {
+            logger.warning("Query params were not in number format.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query params were not in number format.");
+        } catch (Exception e) {
+            logger.severe("Unexpected exception: " + e);
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
         }
     }
 
