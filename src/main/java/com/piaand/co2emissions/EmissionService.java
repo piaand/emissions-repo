@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.awt.print.Pageable;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class EmissionService {
@@ -34,6 +35,7 @@ public class EmissionService {
         return page;
     }
 */
+
     private Double parseEmissionsToDouble(String emissionField) {
         try{
             Double emissions;
@@ -90,6 +92,31 @@ public class EmissionService {
             );
         }
 
+    }
+
+    private List<Integer> findDistinctYears(List<Emission> emissions) {
+        try {
+            List<Integer> years = new ArrayList<>();
+            for (Emission emission: emissions) {
+                Integer year = emission.getYear();
+                if (years.contains(year)) {
+                    //pass
+                } else {
+                    years.add(year);
+                }
+            }
+            if (years.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "No years to allocate the emissions"
+                );
+            } else {
+                return years;
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_IMPLEMENTED, "Unexpected error in separating emissions years."
+            );
+        }
     }
 
     public Emission createDataObjectFromRow(String[] dataRow) {
@@ -182,6 +209,15 @@ public class EmissionService {
                         HttpStatus.NOT_FOUND, "No data with these parameters."
                 );
             }
+
+            List<Integer> years = findDistinctYears(list);
+            for (Integer year: years) {
+                List<Emission> emissionsAtYear = list
+                        .stream()
+                        .filter(e -> e.getYear() == year)
+                        .collect(Collectors.toList());
+            }
+
             Integer groupYear = list.get(0).getYear();
             System.out.println(groupYear);
             ObjectMapper mapper = new ObjectMapper();
@@ -236,10 +272,9 @@ public class EmissionService {
             }
 
             //Pageable page = createPageableSort(emissionType, top);
-            System.out.println("Now search");
             //TODO: if total, then other repository query
             List<Emission> polluters = emissionRepository.findAllByYearBetweenOrderByYearAsc(from, to);
-            System.out.println("print polluter nro 1");
+            //TODO: transform emissions to emissionsdata - send it to parseEmissionResult
 
             return parseEmissionResult(polluters, emissionType, top);
         } catch (NumberFormatException e) {

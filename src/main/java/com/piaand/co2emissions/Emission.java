@@ -39,4 +39,5 @@ public class Emission extends AbstractPersistable<Long> {
     private Double gasFuel;
     @DecimalMin("0.0")
     private Double cement;
+
 }
