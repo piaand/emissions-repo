@@ -23,10 +23,14 @@ public class EmissionService {
     private static final Logger logger = Logger.getLogger(Co2EmissionsApplication.class.getName());
     private final EmissionRepository emissionRepository;
     private final CountryRepository countryRepository;
+    private final EmissionData emissionData;
+    private final ValidType validType;
 
-    public EmissionService(EmissionRepository emissionRepository, CountryRepository countryRepository) {
+    public EmissionService(EmissionRepository emissionRepository, CountryRepository countryRepository, EmissionData emissionData, ValidType validType) {
         this.emissionRepository = emissionRepository;
         this.countryRepository = countryRepository;
+        this.emissionData = emissionData;
+        this.validType = validType;
     }
 /*
     public Pageable createPageableSort(String type, Integer amount){
@@ -73,13 +77,12 @@ public class EmissionService {
 
     //TODO: add total, per capita and bunker fuels
     private String validateType(Map<String, String> allParams) {
-        List<String> validTypes = Arrays.asList("solid", "liquid", "gasflaring", "gasfuel", "cement");
         String emissionType = null;
         Boolean valid = false;
 
         if(allParams.containsKey("type")) {
             emissionType = allParams.get("type").toLowerCase(Locale.ROOT);
-            if (validTypes.contains(emissionType)) {
+            if (validType.getValidTypes().containsKey(emissionType)) {
                 valid = true;
             }
         }
@@ -94,10 +97,10 @@ public class EmissionService {
 
     }
 
-    private List<Integer> findDistinctYears(List<Emission> emissions) {
+    private List<Integer> findDistinctYears(List<EmissionData> emissions) {
         try {
             List<Integer> years = new ArrayList<>();
-            for (Emission emission: emissions) {
+            for (EmissionData emission: emissions) {
                 Integer year = emission.getYear();
                 if (years.contains(year)) {
                     //pass
@@ -202,7 +205,19 @@ public class EmissionService {
         }
     }
 
-    public JsonNode parseEmissionResult(List<Emission> list, String type, Integer limit) {
+    public JsonNode turnEmissionListToJsonNode(ObjectMapper mapper, List<EmissionData> list, Integer year) {
+        try {
+            ObjectNode polluterResultNode = mapper.createObjectNode();
+            ArrayNode array = mapper.valueToTree(list);
+            polluterResultNode.put("year", year);
+            polluterResultNode.set("polluters", array);
+            return polluterResultNode;
+        } catch (Exception e) {
+            throw new RuntimeException("Turning emissionData list to json node failed. Message: " + e);
+        }
+    }
+
+    public JsonNode parseEmissionResult(List<EmissionData> list, Integer type, Integer limit) {
         try {
             if (list.isEmpty()) {
                 throw new ResponseStatusException(
@@ -211,36 +226,21 @@ public class EmissionService {
             }
 
             List<Integer> years = findDistinctYears(list);
+            ObjectMapper mapper = new ObjectMapper();
+            //TODO: try remove conf - no longer object birelational
+            mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            ArrayNode endResult = mapper.createArrayNode();
             for (Integer year: years) {
-                List<Emission> emissionsAtYear = list
+                List<EmissionData> emissionsAtYear = list
                         .stream()
                         .filter(e -> e.getYear() == year)
+                        .sorted((o1, o2) -> (int) (o1.getType(type) - o2.getType(type)))
+                        .limit(limit)
                         .collect(Collectors.toList());
+                //TODO: add type int as parameter and do descending order
+                JsonNode node = turnEmissionListToJsonNode(mapper, emissionsAtYear, year);
+                endResult.add(node);
             }
-
-            Integer groupYear = list.get(0).getYear();
-            System.out.println(groupYear);
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            ObjectNode endResult = mapper.createObjectNode();
-            Integer size = list.size();
-            Integer i = 0;
-
-            for (Emission emission : list) {
-                ArrayNode arrayNode = mapper.createArrayNode();
-                JsonNode node = mapper.convertValue(emission, JsonNode.class);
-                arrayNode.add(node);
-                if(emission.getYear() != groupYear || i == size - 1) {
-                    ObjectNode polluterResultNode = mapper.createObjectNode();
-                    polluterResultNode.set("polluters", arrayNode);
-                    polluterResultNode.put("year", groupYear);
-                    endResult.set("result", polluterResultNode);
-                    groupYear = emission.getYear();
-
-                }
-                i++;
-            }
-            System.out.println(endResult.toString());
             return endResult;
         } catch (Exception e) {
             logger.severe("Unexpected exception: " + e);
@@ -261,6 +261,7 @@ public class EmissionService {
         try {
             //Insert all query params
             emissionType = validateType(allParams);
+            int typeIndex = validType.returnTypeIndex(emissionType);
             if (allParams.containsKey("from")) {
                 from = parseYearToInt(allParams.get("from"));
             }
@@ -274,9 +275,9 @@ public class EmissionService {
             //Pageable page = createPageableSort(emissionType, top);
             //TODO: if total, then other repository query
             List<Emission> polluters = emissionRepository.findAllByYearBetweenOrderByYearAsc(from, to);
-            //TODO: transform emissions to emissionsdata - send it to parseEmissionResult
+            List<EmissionData> list = emissionData.transformToEmissionDataList(polluters);
 
-            return parseEmissionResult(polluters, emissionType, top);
+            return parseEmissionResult(list, typeIndex, top);
         } catch (NumberFormatException e) {
             logger.warning("Query params were not in number format.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query params were not in number format.");
