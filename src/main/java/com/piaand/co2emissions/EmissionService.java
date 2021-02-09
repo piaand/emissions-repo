@@ -6,14 +6,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.awt.print.Pageable;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -32,13 +28,6 @@ public class EmissionService {
         this.emissionData = emissionData;
         this.validType = validType;
     }
-/*
-    public Pageable createPageableSort(String type, Integer amount){
-        Pageable page = (Pageable) PageRequest.of(0, amount, Sort.by("year").ascending()
-                        .and(Sort.by(type).descending()));
-        return page;
-    }
-*/
 
     private Double parseEmissionsToDouble(String emissionField) {
         try{
@@ -205,10 +194,28 @@ public class EmissionService {
         }
     }
 
-    public JsonNode turnEmissionListToJsonNode(ObjectMapper mapper, List<EmissionData> list, Integer year) {
+    public ObjectNode createCountryNode(ObjectMapper mapper, EmissionData emission, int typeIndex) {
+        try{
+            ObjectNode node = mapper.createObjectNode();
+            String name = emission.getCountry();
+            Double pollution = emission.getType(typeIndex);
+            node.put("country", name);
+            node.put("pollutionAmount", pollution);
+            return node;
+        } catch (Exception e) {
+            throw new RuntimeException("EmissonData cannot be turned to JSON node: " + e);
+        }
+    }
+
+    public JsonNode turnEmissionListToJsonNode(ObjectMapper mapper, List<EmissionData> list, Integer year, int typeIndex) {
         try {
             ObjectNode polluterResultNode = mapper.createObjectNode();
-            ArrayNode array = mapper.valueToTree(list);
+            ArrayNode array = mapper.createArrayNode();
+            for (EmissionData emission : list) {
+                JsonNode node = createCountryNode(mapper, emission, typeIndex);
+                array.add(node);
+            }
+
             polluterResultNode.put("year", year);
             polluterResultNode.set("polluters", array);
             return polluterResultNode;
@@ -225,6 +232,7 @@ public class EmissionService {
                 );
             }
 
+            //TODO: for some reason year is cut from 2014 - 2015 or newer wont show
             List<Integer> years = findDistinctYears(list);
             ObjectMapper mapper = new ObjectMapper();
             //TODO: try remove conf - no longer object birelational
@@ -233,12 +241,11 @@ public class EmissionService {
             for (Integer year: years) {
                 List<EmissionData> emissionsAtYear = list
                         .stream()
-                        .filter(e -> e.getYear() == year)
-                        .sorted((o1, o2) -> (int) (o1.getType(type) - o2.getType(type)))
+                        .filter(e -> e.getYear().equals(year))
+                        .sorted((o1, o2) -> (int) ( o2.getType(type) - o1.getType(type) ))
                         .limit(limit)
                         .collect(Collectors.toList());
-                //TODO: add type int as parameter and do descending order
-                JsonNode node = turnEmissionListToJsonNode(mapper, emissionsAtYear, year);
+                JsonNode node = turnEmissionListToJsonNode(mapper, emissionsAtYear, year, type);
                 endResult.add(node);
             }
             return endResult;
@@ -254,8 +261,8 @@ public class EmissionService {
         String emissionType = null;
         //the earliest year we have data on;
         Integer from = 1751;
-        //latest year we have data on
-        Integer to = 2021;
+        //latest year we have data on + 1 to take the last year into account
+        Integer to = 2022;
         Integer top = 0;
 
         try {
@@ -265,8 +272,9 @@ public class EmissionService {
             if (allParams.containsKey("from")) {
                 from = parseYearToInt(allParams.get("from"));
             }
+            //plus 1 is done to include the last year to search
             if (allParams.containsKey("to")) {
-                to = parseYearToInt(allParams.get("to"));
+                to = parseYearToInt(allParams.get("to")) + 1;
             }
             if (allParams.containsKey("top")) {
                 top = Integer.parseInt(allParams.get("top"));
@@ -281,6 +289,8 @@ public class EmissionService {
         } catch (NumberFormatException e) {
             logger.warning("Query params were not in number format.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query params were not in number format.");
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             logger.severe("Unexpected exception: " + e);
             throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
