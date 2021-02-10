@@ -1,12 +1,15 @@
 package com.piaand.co2emissions;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -19,10 +22,26 @@ import javax.validation.constraints.Min;
 @NoArgsConstructor
 public class Emission extends AbstractPersistable<Long> {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Country country;
 
     @Min(1751)
     @Max(2021)
     private Integer year;
+
+    @DecimalMin("0.0")
+    private Double solid;
+    @DecimalMin("0.0")
+    private Double liquid;
+    @DecimalMin("0.0")
+    private Double gasFlaring;
+    @DecimalMin("0.0")
+    private Double gasFuel;
+    @DecimalMin("0.0")
+    private Double cement;
+    @DecimalMin("0.0")
+    private Double perCapita;
+    @DecimalMin("0.0")
+    private Double bunkerFuels;
+
 }
