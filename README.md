@@ -4,6 +4,23 @@ Application builds an API that contains endpoints from where data about the wors
 
 Data is read from the csv that is located at `src/main/resources/csv/emissions.csv`. Csv contains data about polluter countries, the year and category of emissions as well as emissions per capita. Original source of the data can be found [here](https://datahub.io/core/co2-fossil-by-nation#data). 
 
+## Example search
+For example to find 10 most polluting countries in cement category between years 2000 and 2015, you can write:
+
+<b>[/worst/polluters?from=2000&to=2015&type=cement&top=10](https://aqueous-mesa-88968.herokuapp.com/api/v1/worst/polluters?from=2000&to=2015&type=cement&top=10)</b>
+
+To find 5 most polluting countries in total of all categories from the year 2000 to this date (the newest data currently ends at 2014), use:
+
+<b>[/worst/polluters?from=2011&top=5&type=Total](https://aqueous-mesa-88968.herokuapp.com/api/v1/worst/polluters?from=2011&top=5&type=Total)</b>
+
+Query parameters:
+- from: start year of the search, first year there is data is 1751
+- to: the end year of the search, last year there is data is 2014
+- type: one of these following pollution types - cement, solid, liquid, gasFlaring, gasFuel, perCapita, bunkerFuels or total
+- top: how many worst polluters you want to the list - without any top limit search return 0 polluters.
+
+The total type category is the sum of pollution in cement, solid, liquid, gasFlaring and gasFuel categories. Bunker fuels are not taken into account in the total sum.
+
 ## Cleaning the data
 The data in csv is corrupted and therefore some steps are taken before the data is stored in the database. Logs at `logs/emissions.log` record all the rows that were deleted in the process.
 1. Every emission, row of data, must have a named country and a year between 1751 and 2021.
@@ -20,3 +37,4 @@ The data in csv is corrupted and therefore some steps are taken before the data 
 ```
 cat logs/emissions.log | grep "csv has either no year or no country."
 ```
+
