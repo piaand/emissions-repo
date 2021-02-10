@@ -27,6 +27,8 @@ public class EmissionData {
     private Double gasFlaring;
     private Double gasFuel;
     private Double cement;
+    private Double perCapita;
+    private Double bunkerFuels;
 
     interface ReturnType {
         Double getType();
@@ -38,7 +40,9 @@ public class EmissionData {
             new ReturnType() { public Double getType() { return getSolid(); } },
             new ReturnType() { public Double getType() { return getLiquid(); } },
             new ReturnType() { public Double getType() { return getGasFlaring(); } },
-            new ReturnType() { public Double getType() { return getGasFuel(); } }
+            new ReturnType() { public Double getType() { return getGasFuel(); } },
+            new ReturnType() { public Double getType() { return getPerCapita(); } },
+            new ReturnType() { public Double getType() { return getBunkerFuels(); } }
     };
 
     public Double getType(int index) {
@@ -55,6 +59,8 @@ public class EmissionData {
             data.setGasFuel(emission.getGasFuel());
             data.setSolid(emission.getSolid());
             data.setYear(emission.getYear());
+            data.setPerCapita(emission.getPerCapita());
+            data.setBunkerFuels(emission.getBunkerFuels());
 
             return data;
         } catch (Exception e) {

@@ -17,7 +17,9 @@ public class ValidType {
                 "solid", 1,
                 "liquid", 2,
                 "gasflaring", 3,
-                "gasfuel", 4
+                "gasfuel", 4,
+                "percapita", 5,
+                "bunkerfuels", 6
         );
     }
 

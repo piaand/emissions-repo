@@ -66,7 +66,6 @@ public class EmissionService {
         }
     }
 
-    //TODO: add total, per capita and bunker fuels
     private String validateType(Map<String, String> allParams) {
         String emissionType = null;
         Boolean valid = false;
@@ -123,7 +122,9 @@ public class EmissionService {
             Double gasFuel = parseEmissionsToDouble(dataRow[5]);
             Double cement = parseEmissionsToDouble(dataRow[6]);
             Double gasFlaring = parseEmissionsToDouble(dataRow[7]);
-            //TODO: remember to add bunkerfuels and per capita to db
+            Double perCapita = parseEmissionsToDouble(dataRow[8]);
+            Double bunkerFuels = parseEmissionsToDouble(dataRow[9]);
+
 
             //Handle name fromatting of of Viet Nam
             if(countryName.equals("VIET NAM")) {
@@ -135,7 +136,7 @@ public class EmissionService {
             //Create and add emissions to country
             addCountry(countryName);
             Country country = countryRepository.findByName(countryName);
-            Emission emission = new Emission(country, year, solid, liquid, gasFlaring, gasFuel, cement);
+            Emission emission = new Emission(country, year, solid, liquid, gasFlaring, gasFuel, cement, perCapita, bunkerFuels);
             return emission;
         } catch (NumberFormatException e) {
             logger.warning("Year field: " + dataRow[0] + " cannot be transformed to number.");
@@ -250,7 +251,8 @@ public class EmissionService {
                 List<EmissionData> emissionsAtYear = list
                         .stream()
                         .filter(e -> e.getYear().equals(year))
-                        .sorted((o1, o2) -> (int) ( o2.getType(type) - o1.getType(type) ))
+                        .sorted(Comparator.nullsLast(
+                                (e1, e2) -> e2.getType(type).compareTo(e1.getType(type))))
                         .limit(limit)
                         .collect(Collectors.toList());
                 JsonNode node = turnEmissionListToJsonNode(mapper, emissionsAtYear, year, type);
@@ -304,9 +306,11 @@ public class EmissionService {
 
     public ObjectNode listEndPoints() {
         String endPoint1 = "/polluters - returns all polluter countries alphabetically sorted";
+        String endPoint2 = "/worst/polluters - returns the most polluting countries by year and category";
 
         List<String> list = new ArrayList<>();
         list.add(endPoint1);
+        list.add(endPoint2);
         return turnStringListToJson(list);
     }
 
