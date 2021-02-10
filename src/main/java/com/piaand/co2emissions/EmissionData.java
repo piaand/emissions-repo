@@ -29,6 +29,7 @@ public class EmissionData {
     private Double cement;
     private Double perCapita;
     private Double bunkerFuels;
+    private Double total;
 
     interface ReturnType {
         Double getType();
@@ -42,8 +43,19 @@ public class EmissionData {
             new ReturnType() { public Double getType() { return getGasFlaring(); } },
             new ReturnType() { public Double getType() { return getGasFuel(); } },
             new ReturnType() { public Double getType() { return getPerCapita(); } },
-            new ReturnType() { public Double getType() { return getBunkerFuels(); } }
+            new ReturnType() { public Double getType() { return getBunkerFuels(); } },
+            new ReturnType() { public Double getType() { return getTotal(); } }
     };
+
+    //bunkerFuels are not part of the total pollution
+    private Double calculateTotal(Emission emission) throws Exception {
+        try {
+            Double total = emission.getCement() + emission.getLiquid() + emission.getSolid() + emission.getGasFlaring() + emission.getGasFuel();
+            return total;
+        } catch (Exception e) {
+            throw new Exception("Issues with total calculation: " + e);
+        }
+    }
 
     public Double getType(int index) {
         return returnTypes[index].getType();
@@ -61,6 +73,7 @@ public class EmissionData {
             data.setYear(emission.getYear());
             data.setPerCapita(emission.getPerCapita());
             data.setBunkerFuels(emission.getBunkerFuels());
+            data.setTotal(calculateTotal(emission));
 
             return data;
         } catch (Exception e) {

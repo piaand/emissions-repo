@@ -19,7 +19,8 @@ public class ValidType {
                 "gasflaring", 3,
                 "gasfuel", 4,
                 "percapita", 5,
-                "bunkerfuels", 6
+                "bunkerfuels", 6,
+                "total", 7
         );
     }
 
