@@ -37,12 +37,12 @@ class Co2EmissionsApplicationTests {
 	private final Integer year3 = 2000;
 	private final Integer year4 = 2020;
 	private final Double solid1 = 0.0;
-	private final Double solid2 = Double.NaN;
+	private final Double solid2 = 0.0;
 	private final Double solid3 = 100.9;
 	private final Double solid4 = 10.1;
 	private final Double liquid1 = 29.2;
 	private final Double liquid2 = 0.0;
-	private final Double liquid3 = Double.NaN;
+	private final Double liquid3 = 0.0;
 	private final Double liquid4 = 1.0;
 	private final Double gasFlaring = 1.0;
 	private final Double gasFuels = 1.0;
