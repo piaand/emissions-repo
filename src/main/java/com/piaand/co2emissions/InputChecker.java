@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.logging.Logger;
 
+/**
+ * Class to validate and save the read data to the database. Run by the commandline runner.
+ */
 @Data
 @Component
 public class InputChecker {
@@ -24,7 +27,6 @@ public class InputChecker {
             String emissionYear = data[0];
             String emissionCountry = data[1];
             if (emissionYear == null || emissionYear.isBlank() || emissionCountry == null || emissionCountry.isBlank()) {
-                //TODO: add corrupted rows to own table.
                 logger.warning("Data row number " + rowCounter + " in csv has either no year or no country.");
             } else {
                 Emission emission = emissionService.createDataObjectFromRow(data);

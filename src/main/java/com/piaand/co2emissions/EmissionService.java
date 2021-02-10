@@ -2,7 +2,6 @@ package com.piaand.co2emissions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,6 +13,9 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * Service layer that contains all the logic of the API app.
+ */
 @Service
 public class EmissionService {
     private static final Logger logger = Logger.getLogger(Co2EmissionsApplication.class.getName());
@@ -158,14 +160,23 @@ public class EmissionService {
     }
 
     public JsonNode listPollutersAlphabetically() {
-        List<Country> polluterRows = countryRepository.findAllByOrderByName();
-        List<String> polluters = new ArrayList<>();
-        for (Country polluter : polluterRows) {
-            String name = polluter.getName();
-            polluters.add(name);
+        try {
+            List<Country> polluterRows = countryRepository.findAllByOrderByName();
+            List<String> polluters = new ArrayList<>();
+            for (Country polluter : polluterRows) {
+                String name = polluter.getName();
+                polluters.add(name);
+            }
+            JsonNode result = turnStringListToJson(polluters);
+            return result;
+        } catch (ResponseStatusException e) {
+             throw e;
+        } catch (Exception e) {
+            logger.severe("Unexpected exception: " + e);
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_IMPLEMENTED
+            );
         }
-        JsonNode result = turnStringListToJson(polluters);
-        return result;
     }
 
     public ObjectNode turnStringListToJson(List<String> names) {
@@ -203,7 +214,7 @@ public class EmissionService {
             node.put("pollutionAmount", pollution);
             return node;
         } catch (Exception e) {
-            throw new RuntimeException("EmissonData cannot be turned to JSON node: " + e);
+            throw new RuntimeException("EmissionData cannot be turned to JSON node: " + e);
         }
     }
 
@@ -232,11 +243,8 @@ public class EmissionService {
                 );
             }
 
-            //TODO: for some reason year is cut from 2014 - 2015 or newer wont show
             List<Integer> years = findDistinctYears(list);
             ObjectMapper mapper = new ObjectMapper();
-            //TODO: try remove conf - no longer object birelational
-            mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
             ArrayNode endResult = mapper.createArrayNode();
             for (Integer year: years) {
                 List<EmissionData> emissionsAtYear = list
@@ -261,8 +269,7 @@ public class EmissionService {
         String emissionType = null;
         //the earliest year we have data on;
         Integer from = 1751;
-        //latest year we have data on + 1 to take the last year into account
-        Integer to = 2022;
+        Integer to = 2021;
         Integer top = 0;
 
         try {
@@ -272,15 +279,13 @@ public class EmissionService {
             if (allParams.containsKey("from")) {
                 from = parseYearToInt(allParams.get("from"));
             }
-            //plus 1 is done to include the last year to search
             if (allParams.containsKey("to")) {
-                to = parseYearToInt(allParams.get("to")) + 1;
+                to = parseYearToInt(allParams.get("to"));
             }
             if (allParams.containsKey("top")) {
                 top = Integer.parseInt(allParams.get("top"));
             }
 
-            //Pageable page = createPageableSort(emissionType, top);
             //TODO: if total, then other repository query
             List<Emission> polluters = emissionRepository.findAllByYearBetweenOrderByYearAsc(from, to);
             List<EmissionData> list = emissionData.transformToEmissionDataList(polluters);

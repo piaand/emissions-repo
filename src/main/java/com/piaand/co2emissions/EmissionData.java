@@ -6,12 +6,14 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Data wrapper that handles and transforms the data from db.
+ * Interface Return type is closest to the function pointer array I think of in Java.
+ *  - calling method getType with index number returns the respective getter for the type
+ *      * i.e getCement() with 0 or getSolid() with 1
+ *
  */
 @Component
 @Data
@@ -56,7 +58,7 @@ public class EmissionData {
 
             return data;
         } catch (Exception e) {
-            throw new RuntimeException("Emission " + emission.getId() + " cannot be transformed to emissionData.");
+            throw new RuntimeException("Emission " + emission.getId() + " cannot be transformed to emissionData. " + e);
         }
     }
 
@@ -65,7 +67,7 @@ public class EmissionData {
             List<EmissionData> list = emissions.stream().map(emission -> transformToEmissionData(emission)).collect(Collectors.toList());
             return (list);
         } catch (Exception e) {
-            throw new RuntimeException("Transforming Emission list failed.");
+            throw new RuntimeException("Transforming Emission list failed. Message: " + e);
         }
     }
 
